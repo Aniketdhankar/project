@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Response Time Prediction</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Optionally, include Chart.js from CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body { padding: 20px; }
+    .chart-container { position: relative; height: 300px; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1 class="mb-4">Response Time Prediction</h1>
+  <p class="text-muted mb-4">Real-time emergency response predictions based on current conditions.</p>
+  
+  <!-- Zone Selection -->
+  <div class="mb-4">
+    <label for="zoneSelect" class="form-label">Select Zone:</label>
+    <select id="zoneSelect" class="form-select">
+      <option value="Central Zone">Central Zone</option>
+      <option value="North Zone">North Zone</option>
+      <option value="South Zone">South Zone</option>
+      <option value="East Zone">East Zone</option>
+      <option value="West Zone">West Zone</option>
+    </select>
+  </div>
+  
+  <!-- Prediction Data -->
+  <div class="row mb-4">
+    <div class="col-md-4">
+      <div class="card p-3">
+        <h5>Current Response Time</h5>
+        <p id="currentResponseTime" class="display-4">8 min</p>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card p-3">
+        <h5>Usual Response Time</h5>
+        <p id="usualResponseTime" class="display-4">12 min</p>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card p-3">
+        <h5>Traffic Condition</h5>
+        <p id="trafficCondition" class="h4 text-success">Low Traffic</p>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Historical Trend Chart -->
+  <div class="card">
+    <div class="card-header">
+      <h5>Response Time Trend</h5>
+    </div>
+    <div class="card-body">
+      <div class="chart-container">
+        <canvas id="trendChart"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Dummy data for zones
+const zoneData = {
+  "Central Zone": { current: 8, usual: 12, traffic: "Low" },
+  "North Zone": { current: 15, usual: 12, traffic: "High" },
+  "South Zone": { current: 10, usual: 12, traffic: "Moderate" },
+  "East Zone": { current: 11, usual: 12, traffic: "Moderate" },
+  "West Zone": { current: 9, usual: 12, traffic: "Low" },
+};
+
+// Dummy historical data for chart
+const historicalData = {
+  labels: ["6 AM", "9 AM", "12 PM", "3 PM", "6 PM", "9 PM"],
+  datasets: [{
+    label: "Response Time (min)",
+    data: [8, 15, 12, 10, 14, 9],
+    borderColor: "#2563eb",
+    tension: 0.3,
+    fill: false,
+  }]
+};
+
+const ctx = document.getElementById('trendChart').getContext('2d');
+const trendChart = new Chart(ctx, {
+  type: 'line',
+  data: historicalData,
+  options: {
+    responsive: true,
+    scales: {
+      y: { beginAtZero: true }
+    }
+  }
+});
+
+// Update prediction info when zone is changed
+document.getElementById('zoneSelect').addEventListener('change', function() {
+  const zone = this.value;
+  const data = zoneData[zone];
+  document.getElementById('currentResponseTime').textContent = data.current + " min";
+  document.getElementById('usualResponseTime').textContent = data.usual + " min";
+  document.getElementById('trafficCondition').textContent = data.traffic + " Traffic";
+});
+</script>
+</body>
+</html>

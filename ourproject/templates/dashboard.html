@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Healthcare Dashboard</title>
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Bootstrap Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+  <style>
+    body { padding: 20px; }
+    .scroll-area { max-height: 200px; overflow-y: auto; }
+    .card { margin-bottom: 20px; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <!-- Header Section -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h1>Healthcare Dashboard</h1>
+      <p class="text-muted">Manage your insurance and healthcare benefits</p>
+    </div>
+    <button id="verifyCoverageBtn" class="btn btn-primary">
+      <i class="bi bi-shield-lock"></i> <span id="verifyText">Verify Coverage</span>
+    </button>
+  </div>
+
+  <!-- Medical Profile Card (if available) -->
+  {% if profile %}
+  <div class="card mb-4">
+    <div class="card-header">
+      <h5>Your Medical Profile</h5>
+    </div>
+    <div class="card-body">
+      <p><strong>Full Name:</strong> {{ profile.full_name }}</p>
+      <p><strong>Date of Birth:</strong> {{ profile.date_of_birth }}</p>
+      <p><strong>Blood Group:</strong> {{ profile.blood_group }}</p>
+      <p><strong>Allergies:</strong> {{ profile.allergies }}</p>
+      <p><strong>Existing Conditions:</strong> {{ profile.existing_conditions }}</p>
+      <p><strong>Medications:</strong> {{ profile.medications }}</p>
+      <p><strong>Emergency Contact:</strong> {{ profile.emergency_contact_name }} ({{ profile.emergency_contact_relationship }}) - {{ profile.emergency_contact_phone }}</p>
+    </div>
+  </div>
+  {% else %}
+  <div class="alert alert-warning">
+    You have not submitted your medical profile yet. Please <a href="{{ url_for('medical_profile') }}">click here</a> to update your profile.
+  </div>
+  {% endif %}
+
+  <!-- Main Content -->
+  <div class="row">
+    <!-- Insurance Overview Card -->
+    <div class="col-md-8">
+      <div class="card">
+        <div class="card-header">
+          <h5>Insurance Overview</h5>
+          <p class="card-text">Your active insurance policies and coverage details</p>
+        </div>
+        <div class="card-body">
+          <!-- Tabs for insurance schemes -->
+          <ul class="nav nav-tabs" id="schemeTabs" role="tablist">
+            {% for key, scheme in schemes.items() %}
+            <li class="nav-item" role="presentation">
+              <button class="nav-link {% if loop.first %}active{% endif %}" id="tab-{{ key }}" data-bs-toggle="tab" data-bs-target="#{{ key }}" type="button" role="tab">
+                {{ scheme.name }}
+              </button>
+            </li>
+            {% endfor %}
+          </ul>
+          <div class="tab-content mt-3">
+            <!-- Ayushman Tab with Refresh Button -->
+            <div class="tab-pane fade show active" id="ayushman" role="tabpanel">
+              <button id="refreshAyushman" class="btn btn-secondary btn-sm mb-2">Refresh Data</button>
+              <div class="row">
+                <div class="col-md-6">
+                  <p><strong>Card Number:</strong> {{ schemes['ayushman'].cardNumber }}</p>
+                </div>
+                <div class="col-md-6">
+                  <p><strong>Valid Till:</strong> <span id="ayushmanValidTill">{{ schemes['ayushman'].validTill }}</span></p>
+                </div>
+              </div>
+              <p><strong>Coverage Utilized:</strong> <span id="ayushmanUtilized">{{ schemes['ayushman'].utilized }}</span> of <span id="ayushmanCoverage">{{ schemes['ayushman'].coverage }}</span></p>
+              <div class="progress mb-2">
+                <div class="progress-bar" role="progressbar" style="width: 15%;" aria-valuenow="15" aria-valuemin="0" aria-valuemax="100"></div>
+              </div>
+              <p>
+                <span id="ayushmanStatus" class="badge bg-success">{{ schemes['ayushman'].status }}</span> Last verified 2 days ago
+              </p>
+            </div>
+            <!-- State Insurance Tab -->
+            <div class="tab-pane fade" id="state" role="tabpanel">
+              <div class="row">
+                <div class="col-md-6">
+                  <p><strong>Card Number:</strong> {{ schemes['state'].cardNumber }}</p>
+                </div>
+                <div class="col-md-6">
+                  <p><strong>Valid Till:</strong> {{ schemes['state'].validTill }}</p>
+                </div>
+              </div>
+              <p><strong>Coverage Utilized:</strong> {{ schemes['state'].utilized }} of {{ schemes['state'].coverage }}</p>
+              <div class="progress mb-2">
+                <div class="progress-bar" role="progressbar" style="width: 15%;" aria-valuenow="15" aria-valuemin="0" aria-valuemax="100"></div>
+              </div>
+              <p>
+                <span class="badge bg-success">{{ schemes['state'].status }}</span> Last verified 2 days ago
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+<!-- Quick Actions Card -->
+<div class="col-md-4">
+  <div class="card mb-3">
+    <div class="card-header">
+      <h5>Quick Actions</h5>
+    </div>
+    <div class="card-body">
+      <button class="btn btn-outline-primary w-100 mb-2" data-bs-toggle="modal" data-bs-target="#claimModal">
+        <i class="bi bi-credit-card"></i> Submit New Claim
+      </button>
+      <button class="btn btn-outline-primary w-100 mb-2" data-bs-toggle="modal" data-bs-target="#appointmentModal">
+        <i class="bi bi-calendar"></i> Schedule Appointment
+      </button>
+      <button class="btn btn-outline-primary w-100 mb-2" data-bs-toggle="modal" data-bs-target="#recordsModal">
+        <i class="bi bi-activity"></i> View Health Records
+      </button>
+      <button class="btn btn-outline-primary w-100 mb-2" data-bs-toggle="modal" data-bs-target="#profileModal">
+        <i class="bi bi-person"></i> Update Profile
+      </button>
+
+      <!-- Existing Quick Actions -->
+      <a href="{{ url_for('ambulance_booking') }}" class="btn btn-outline-danger w-100 mb-2">
+        <i class="bi bi-truck"></i> Book an Ambulance
+      </a>
+      <a href="{{ url_for('ambulance_tracking') }}" class="btn btn-outline-success w-100 mb-2">
+        <i class="bi bi-geo-alt"></i> Ambulance Tracking
+      </a>
+      <a href="{{ url_for('predictive_response') }}" class="btn btn-outline-info w-100 mb-2">
+        <i class="bi bi-bar-chart-line"></i> Predictive Response
+      </a>
+      <a href="{{ url_for('chatbot') }}" class="btn btn-outline-secondary w-100 mb-2">
+        <i class="bi bi-chat-dots"></i> AI Chatbot
+      </a>
+      
+      <!-- AI Life Expectancy Predictor -->
+      <a href="{{ url_for('predictor') }}" class="btn btn-outline-warning w-100 mb-2">
+        <i class="bi bi-heart-pulse"></i> AI Life Expectancy Predictor
+      </a>
+
+      <!-- New Quick Action: Community Forum -->
+      <a href="{{ url_for('community') }}" class="btn btn-outline-dark w-100">
+        <i class="bi bi-people"></i> Community Forum
+      </a>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+  <!-- Recent Claims Card -->
+  <div class="card">
+    <div class="card-header">
+      <h5>Recent Claims</h5>
+      <p class="card-text">Track your insurance claims</p>
+    </div>
+    <div class="card-body scroll-area">
+      {% for claim in recent_claims %}
+      <div class="d-flex justify-content-between align-items-center p-2 mb-2 bg-light rounded">
+        <div class="d-flex align-items-center">
+          <div class="me-3">
+            {% if claim.status == "Approved" %}
+            <i class="bi bi-check-circle-fill text-success"></i>
+            {% else %}
+            <i class="bi bi-clock-fill text-warning"></i>
+            {% endif %}
+          </div>
+          <div>
+            <p class="mb-0">{{ claim.hospital }}</p>
+            <small class="text-muted">{{ claim.date }}</small>
+          </div>
+        </div>
+        <div class="text-end">
+          <p class="mb-0">{{ claim.amount }}</p>
+          {% if claim.status == "Approved" %}
+          <span class="badge bg-success">{{ claim.status }}</span>
+          {% else %}
+          <span class="badge bg-warning text-dark">{{ claim.status }}</span>
+          {% endif %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Upcoming Appointments Card -->
+  <div class="card mt-3">
+    <div class="card-header">
+      <h5>Upcoming Appointments</h5>
+    </div>
+    <div class="card-body scroll-area">
+      {% for appointment in upcoming_appointments %}
+      <div class="p-2 mb-2 bg-light rounded">
+        <div class="d-flex justify-content-between">
+          <p class="mb-0">{{ appointment.doctor }}</p>
+          <span class="badge bg-secondary">{{ appointment.type }}</span>
+        </div>
+        <div class="text-muted">
+          <small>
+            <i class="bi bi-calendar"></i> {{ appointment.date }} &nbsp;
+            <i class="bi bi-clock"></i> {{ appointment.time }}
+          </small>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<!-- Modals (Claim, Appointment, Health Records, Profile Update) -->
+<!-- Claim Modal -->
+<div class="modal fade" id="claimModal" tabindex="-1" aria-labelledby="claimModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <form id="claimForm">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="claimModalLabel">Submit Insurance Claim</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label for="hospital" class="form-label">Hospital Name</label>
+            <input type="text" class="form-control" id="hospital" required>
+          </div>
+          <div class="mb-3">
+            <label for="amount" class="form-label">Claim Amount</label>
+            <input type="number" class="form-control" id="amount" required>
+          </div>
+          <div class="mb-3">
+            <label for="date" class="form-label">Date of Service</label>
+            <input type="date" class="form-control" id="date" required>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary">Submit Claim</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Appointment Modal -->
+<div class="modal fade" id="appointmentModal" tabindex="-1" aria-labelledby="appointmentModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <form id="appointmentForm">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="appointmentModalLabel">Schedule an Appointment</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label for="doctor" class="form-label">Select Doctor</label>
+            <input type="text" class="form-control" id="doctor" required>
+          </div>
+          <div class="mb-3">
+            <label for="appointmentDate" class="form-label">Preferred Date</label>
+            <input type="date" class="form-control" id="appointmentDate" required>
+          </div>
+          <div class="mb-3">
+            <label for="appointmentTime" class="form-label">Preferred Time</label>
+            <input type="time" class="form-control" id="appointmentTime" required>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary">Book Appointment</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Health Records Modal -->
+<div class="modal fade" id="recordsModal" tabindex="-1" aria-labelledby="recordsModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="recordsModalLabel">Health Records</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="border p-3 rounded mb-2">
+          <h6>Annual Checkup</h6>
+          <p class="text-muted mb-0">15 Jan 2024</p>
+        </div>
+        <div class="border p-3 rounded">
+          <h6>Blood Test Results</h6>
+          <p class="text-muted mb-0">03 Dec 2023</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Profile Update Modal -->
+<div class="modal fade" id="profileModal" tabindex="-1" aria-labelledby="profileModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <form id="profileForm">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="profileModalLabel">Update Profile</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label for="name" class="form-label">Full Name</label>
+            <input type="text" class="form-control" id="name" value="John Doe" required>
+          </div>
+          <div class="mb-3">
+            <label for="email" class="form-label">Email</label>
+            <input type="email" class="form-control" id="email" value="john@example.com" required>
+          </div>
+          <div class="mb-3">
+            <label for="phone" class="form-label">Phone</label>
+            <input type="text" class="form-control" id="phone" value="+91 98765 43210" required>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary">Save Changes</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Chatbot Modal -->
+<div class="modal fade" id="chatbotModal" tabindex="-1" aria-labelledby="chatbotModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="chatbotModalLabel">Emergency AI Assistant</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <iframe src="{{ url_for('chatbot') }}" width="100%" height="400px" style="border:none;"></iframe>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast Container -->
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
+  <div id="toastContainer"></div>
+</div>
+
+<!-- Bootstrap JS Bundle with Popper -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+// Helper function for toast notifications
+function showToast(message, description, type = 'success') {
+  const toastContainer = document.getElementById('toastContainer');
+  const toastId = 'toast' + Date.now();
+  const toastHtml = `
+    <div id="${toastId}" class="toast align-items-center text-bg-${type} border-0 mb-2" role="alert" aria-live="assertive" aria-atomic="true">
+      <div class="d-flex">
+        <div class="toast-body">
+          <strong>${message}</strong><br>${description}
+        </div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+      </div>
+    </div>
+  `;
+  toastContainer.insertAdjacentHTML('beforeend', toastHtml);
+  const toastEl = document.getElementById(toastId);
+  const toast = new bootstrap.Toast(toastEl, { delay: 3000 });
+  toast.show();
+  setTimeout(() => { toastEl.remove(); }, 4000);
+}
+
+// Verify Coverage
+document.getElementById('verifyCoverageBtn').addEventListener('click', function() {
+  const btn = this;
+  const verifyText = document.getElementById('verifyText');
+  btn.disabled = true;
+  verifyText.textContent = 'Verifying...';
+  fetch('/verify_coverage', { method: 'POST' })
+    .then(response => response.json())
+    .then(data => { showToast(data.message, data.description); })
+    .catch(error => { showToast('Verification Failed', 'Please try again later.', 'danger'); })
+    .finally(() => {
+      btn.disabled = false;
+      verifyText.textContent = 'Verify Coverage';
+    });
+});
+
+// Refresh Ayushman Data
+document.getElementById('refreshAyushman').addEventListener('click', function() {
+  fetch('/ayushman_data')
+    .then(response => response.json())
+    .then(data => {
+      if(data.error) {
+         showToast("Error", data.details, "danger");
+      } else {
+         document.getElementById("ayushmanCoverage").textContent = data.coverage || "{{ schemes['ayushman'].coverage }}";
+         document.getElementById("ayushmanUtilized").textContent = data.utilized || "{{ schemes['ayushman'].utilized }}";
+         document.getElementById("ayushmanValidTill").textContent = data.validTill || "{{ schemes['ayushman'].validTill }}";
+         document.getElementById("ayushmanStatus").textContent = data.status || "{{ schemes['ayushman'].status }}";
+         showToast("Data Updated", "Ayushman Bharat data refreshed successfully.");
+      }
+    })
+    .catch(error => showToast("Error", error.toString(), "danger"));
+});
+
+// Submit Claim
+document.getElementById('claimForm').addEventListener('submit', function(e) {
+  e.preventDefault();
+  const formData = new FormData(this);
+  fetch('/submit_claim', { method: 'POST', body: formData })
+    .then(response => response.json())
+    .then(data => { showToast(data.message, data.description); location.reload(); })
+    .catch(error => { showToast('Submission Failed', 'Please try again.', 'danger'); });
+});
+
+// Book Appointment
+document.getElementById('appointmentForm').addEventListener('submit', function(e) {
+  e.preventDefault();
+  const formData = new FormData(this);
+  fetch('/book_appointment', { method: 'POST', body: formData })
+    .then(response => response.json())
+    .then(data => { showToast(data.message, data.description); location.reload(); })
+    .catch(error => { showToast('Appointment Failed', 'Please try again.', 'danger'); });
+});
+
+// Update Profile
+document.getElementById('profileForm').addEventListener('submit', function(e) {
+  e.preventDefault();
+  const formData = new FormData(this);
+  fetch('/update_profile', { method: 'POST', body: formData })
+    .then(response => response.json())
+    .then(data => { showToast(data.message, data.description); location.reload(); })
+    .catch(error => { showToast('Update Failed', 'Please try again.', 'danger'); });
+});
+
+document.getElementById("openChatbot").addEventListener("click", function () {
+  var chatbotModal = new bootstrap.Modal(document.getElementById("chatbotModal"));
+  chatbotModal.show();
+});
+</script>
+</body>
+</html>
