@@ -250,3 +250,52 @@ plt.show()
 # 3. Pairplot (only key features to keep it clean)
 sns.pairplot(df[['MedInc', 'HouseAge', 'AveRooms', 'Target']])
 plt.show()
+
+---------------------------------------------------------------------------------------
+import numpy as np
+import matplotlib.pyplot as plt
+from numpy.polynomial.polynomial import Polynomial
+
+# Generate data
+x = np.linspace(1, 10, 100)
+y = np.sin(x) + np.random.normal(0, 0.1, 100)
+
+# LWR function
+def lwr(x0, x, y, tau=0.5):
+    w = np.exp(-((x - x0) ** 2) / (2 * tau ** 2))
+    X_ = np.c_[np.ones_like(x), x]
+    x0_ = np.array([1, x0])
+    W = np.diag(w)
+    theta = np.linalg.pinv(X_.T @ W @ X_) @ X_.T @ W @ y
+    return x0_ @ theta
+
+# Predict using LWR
+y_pred_lwr = [lwr(xi, x, y) for xi in x]
+
+# Linear Regression
+X_linear = np.c_[np.ones_like(x), x]
+theta_linear = np.linalg.pinv(X_linear.T @ X_linear) @ X_linear.T @ y
+y_pred_linear = X_linear @ theta_linear
+
+# Polynomial Regression (degree 3)
+poly = Polynomial.fit(x, y, 3)
+y_pred_poly = poly(x)
+
+# LWR plot
+plt.figure(figsize=(6, 4))
+plt.scatter(x, y, color='lightblue')
+plt.plot(x, y_pred_lwr, color='red')
+plt.title("Locally Weighted Regression")
+plt.show()
+
+plt.figure(figsize=(6, 4))
+plt.scatter(x, y, color='lightblue')
+plt.plot(x, y_pred_linear, color='green')
+plt.title("Linear Regression")
+plt.show()
+
+plt.figure(figsize=(6, 4))
+plt.scatter(x, y, color='lightblue')
+plt.plot(x, y_pred_poly, color='purple')
+plt.title("Polynomial Regression")
+plt.show()
