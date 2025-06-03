@@ -299,3 +299,30 @@ plt.scatter(x, y, color='lightblue')
 plt.plot(x, y_pred_poly, color='purple')
 plt.title("Polynomial Regression")
 plt.show()
+
+___-------------------------------------------------------------------------------
+
+import numpy as np
+import matplotlib.pyplot as plt
+
+x = np.linspace(1, 10, 100)
+y = np.sin(x) + np.random.normal(0, 0.1, 100)
+
+
+def lwr(x0, x, y, tau=0.5):
+    w = np.exp(-((x - x0) ** 2) / (2 * tau ** 2))
+    X_ = np.c_[np.ones_like(x), x]
+    x0_ = np.array([1, x0])
+    W = np.diag(w)
+    theta = np.linalg.pinv(X_.T @ W @ X_) @ X_.T @ W @ y
+    return x0_ @ theta
+
+
+y_pred = [lwr(xi, x, y) for xi in x]
+
+
+plt.scatter(x, y, color='lightblue', label='Data')
+plt.plot(x, y_pred, color='red', label='LWR Fit')
+plt.legend()
+plt.title("Locally Weighted Regression")
+plt.show()
