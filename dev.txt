@@ -1,0 +1,217 @@
+4---
+# 1. Create Maven project
+mvn archetype:generate -DgroupId=com.example -DartifactId=myapp \
+  -DarchetypeArtifactId=maven-archetype-quickstart -DinteractiveMode=false
+
+# 2. Enter the project directory
+cd myapp
+
+# 3. Check directory structure
+tree .  # or use 'ls' if tree is not available
+
+# 4. View/edit the App.java file
+# File: src/main/java/com/example/App.java
+# Make sure it has:
+package com.example;
+
+public class App {
+    public static void main(String[] args) {
+        System.out.println("Hello from Maven App!");
+    }
+}
+
+# 5. Compile the project
+mvn compile
+
+# 6. Run the unit tests (optional)
+mvn test
+
+# 7. Package into a JAR
+mvn package
+
+# 8. Run the compiled program
+java -cp target/myapp-1.0-SNAPSHOT.jar com.example.App
+
+
+
+# 1. Create an empty directory for the Gradle project
+cd ..
+mkdir myapp-gradle
+cd myapp-gradle
+
+# 2. Initialize a Java application with Gradle
+gradle init --type java-application
+
+# Select options during prompt:
+# - Project name: myapp-gradle
+# - Application framework: 1 (Java Application)
+# - DSL: 1 (Groovy)
+# - Generate build using new APIs: No
+
+# 3. Copy your source code from Maven project
+cp -r ../myapp/src ./   # Copy src folder from Maven to Gradle project
+
+# 4. Open 'src/main/java/com/example/App.java' and verify it has:
+package com.example;
+
+public class App {
+    public static void main(String[] args) {
+        System.out.println("Hello from Gradle App!");
+    }
+}
+
+# 5. View and edit build.gradle (optional)
+# It already includes 'application' plugin
+# Make sure this is set:
+application {
+    mainClassName = 'com.example.App'
+}
+
+# 6. Build the project
+gradle build
+
+# 7. Run the program
+gradle run
+
+
+------------
+# 1. Create project
+mvn archetype:generate -DgroupId=com.example -DartifactId=myapp -DarchetypeArtifactId=maven-archetype-quickstart -DinteractiveMode=false
+
+# 2. Enter directory
+cd myapp
+
+# 3. See structure (if tree not available, use ls or dir)
+tree
+
+# 4. Open pom.xml
+code pom.xml     # or any editor
+
+# 5. Edit this file: src/main/java/com/example/App.java
+# with this code:
+package com.example;
+
+public class App {
+    public static void main(String[] args) {
+        System.out.println("hello");
+    }
+}
+
+# 6. Compile
+mvn compile
+
+# 7. Run tests (if any)
+mvn test
+
+# 8. Package into .jar
+mvn package
+
+# 9. Run the program
+java -cp target/myapp-1.0-SNAPSHOT.jar com.example.App
+
+--------------------------------------------------
+
+# 1. Create a new project folder
+mkdir mygradleproject
+
+# 2. Move into the folder
+cd mygradleproject
+
+# 3. Initialize Gradle project with Java application template
+gradle init --type java-application
+
+# You will be prompted to choose options:
+# - Project name: mygradleproject
+# - Application structure: 2 (for application)
+# - Build script DSL: 1 (Groovy)
+# - Test framework: 1 (JUnit)
+# - Generate sample code: yes
+# - Generate build using Gradle Kotlin DSL: no
+
+# 4. Open build.gradle file in editor
+code build.gradle   # or use notepad, nano, etc.
+
+# 5. Add a custom task at the end of build.gradle
+# (if you're using Groovy DSL, which is default)
+
+tasks.register("greet") {
+    doLast {
+        println("This is a custom task")
+    }
+}
+
+# 6. Run the build
+gradle build
+
+# 7. Run the main class
+gradle run
+
+# 8. Run the custom task
+gradle greet
+
+
+
+---------------------------------
+
+#!/bin/bash
+
+# Program 7 - Ansible Basic Playbook Execution
+
+# Step 1: Install Ansible
+sudo apt update
+sudo apt upgrade -y
+sudo apt install -y ansible
+
+# Step 2: Create Inventory File
+cat <<EOL > hosts.ini
+[local]
+localhost ansible_connection=local
+EOL
+
+# Step 3: Create Playbook File
+cat <<EOL > setup.yml
+- name: Basic Server Setup
+  hosts: local
+  become: true
+  tasks:
+    - name: Example task
+      debug:
+        msg: "Hello, this is a basic setup"
+EOL
+
+# Step 4: Run the playbook
+ansible-playbook -i hosts.ini setup.yml
+-----------------------------------------------------
+#!/bin/bash
+
+# Step 1: Go to Desktop and create a folder for the project
+cd ~/Desktop
+mkdir gitproject
+cd gitproject
+
+# Step 2: Initialize Git repository
+git init
+
+# Step 3: Create a sample file using echo or vi (here we use echo)
+echo "# Sample Git File" > file1.sh
+
+# Step 4: Check if the file was created
+ls
+
+# Step 5: Stage and commit the file
+git add *
+git commit -m "Initial commit"
+
+# Step 6: Set Git user configuration
+git config --global user.name "Aniket Dhankar"
+git config --global user.email "aniket@example.com"
+
+# Step 7: Add remote using custom alias (e.g., mygithub)
+git remote add mygithub https://github.com/aniketdev/my-first-repo.git
+
+# Step 8: Check the remote added
+git remote -v
+
+# Step 9: Push to the remote repository (assuming branch is master or main)
+git push mygithub master
+
