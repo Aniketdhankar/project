@@ -1,0 +1,52 @@
+/* Workload Heatmap Styles */
+
+.workload-heatmap {
+  height: 100%;
+}
+
+.chart-container {
+  height: 300px;
+  margin-bottom: 20px;
+}
+
+.workload-summary {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+  padding-top: 10px;
+  border-top: 1px solid #eee;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+}
+
+.legend-color {
+  width: 20px;
+  height: 20px;
+  border-radius: 3px;
+}
+
+.legend-color.green {
+  background-color: rgba(76, 175, 80, 0.7);
+  border: 1px solid rgba(76, 175, 80, 1);
+}
+
+.legend-color.orange {
+  background-color: rgba(255, 152, 0, 0.7);
+  border: 1px solid rgba(255, 152, 0, 1);
+}
+
+.legend-color.red {
+  background-color: rgba(244, 67, 54, 0.7);
+  border: 1px solid rgba(244, 67, 54, 1);
+}
+
+.loading {
+  text-align: center;
+  padding: 20px;
+  color: #999;
+}
