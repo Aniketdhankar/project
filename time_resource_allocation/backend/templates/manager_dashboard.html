@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manager Dashboard - Time & Resource Allocation</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+  <!-- Navigation -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="/manager/dashboard">
+        <i class="bi bi-lightning-charge-fill"></i> Time & Resource Allocation
+      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item">
+            <a class="nav-link active" href="/manager/dashboard"><i class="bi bi-speedometer2"></i> Dashboard</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/manager/employees"><i class="bi bi-people"></i> Employees</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/manager/tasks"><i class="bi bi-list-task"></i> Tasks</a>
+          </li>
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
+              <i class="bi bi-person-circle"></i> <span id="navUserName">Manager</span>
+            </a>
+            <ul class="dropdown-menu dropdown-menu-end">
+              <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#profileModal"><i class="bi bi-gear"></i> Settings</a></li>
+              <li><hr class="dropdown-divider"></li>
+              <li><a class="dropdown-item" href="#" id="logoutBtn"><i class="bi bi-box-arrow-right"></i> Logout</a></li>
+            </ul>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container-fluid py-4">
+    <!-- Dashboard Cards -->
+    <div class="row mb-4">
+      <div class="col-md-3">
+        <div class="card text-white bg-primary">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center">
+              <div>
+                <h6 class="card-title mb-0">Total Tasks</h6>
+                <h2 class="mb-0 mt-2" id="totalTasks">0</h2>
+              </div>
+              <i class="bi bi-list-task" style="font-size: 2.5rem; opacity: 0.7;"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="col-md-3">
+        <div class="card text-white bg-success">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center">
+              <div>
+                <h6 class="card-title mb-0">Completed</h6>
+                <h2 class="mb-0 mt-2" id="completedTasks">0</h2>
+              </div>
+              <i class="bi bi-check-circle" style="font-size: 2.5rem; opacity: 0.7;"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="col-md-3">
+        <div class="card text-white bg-warning">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center">
+              <div>
+                <h6 class="card-title mb-0">In Progress</h6>
+                <h2 class="mb-0 mt-2" id="inProgressTasks">0</h2>
+              </div>
+              <i class="bi bi-clock-history" style="font-size: 2.5rem; opacity: 0.7;"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="col-md-3">
+        <div class="card text-white bg-danger">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center">
+              <div>
+                <h6 class="card-title mb-0">Overdue</h6>
+                <h2 class="mb-0 mt-2" id="overdueTasks">0</h2>
+              </div>
+              <i class="bi bi-exclamation-triangle" style="font-size: 2.5rem; opacity: 0.7;"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="row">
+      <!-- Left Column -->
+      <div class="col-lg-8">
+        <!-- Resource Utilization Chart -->
+        <div class="card mb-4">
+          <div class="card-header bg-white">
+            <h5 class="mb-0"><i class="bi bi-bar-chart"></i> Resource Utilization</h5>
+          </div>
+          <div class="card-body">
+            <canvas id="resourceChart" height="80"></canvas>
+          </div>
+        </div>
+
+        <!-- Velocity Chart -->
+        <div class="card mb-4">
+          <div class="card-header bg-white">
+            <h5 class="mb-0"><i class="bi bi-graph-up"></i> Team Velocity</h5>
+          </div>
+          <div class="card-body">
+            <canvas id="velocityChart" height="80"></canvas>
+          </div>
+        </div>
+
+        <!-- Task Queue -->
+        <div class="card mb-4">
+          <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="bi bi-list-check"></i> Task Queue</h5>
+            <div class="btn-group btn-group-sm" role="group">
+              <button type="button" class="btn btn-outline-primary" onclick="filterTasks('all')">All</button>
+              <button type="button" class="btn btn-outline-primary" onclick="filterTasks('pending')">Pending</button>
+              <button type="button" class="btn btn-outline-primary" onclick="filterTasks('assigned')">Assigned</button>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="table-responsive">
+              <table class="table table-hover">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Title</th>
+                    <th>Priority</th>
+                    <th>Status</th>
+                    <th>Deadline</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="taskQueueTable">
+                  <tr>
+                    <td colspan="6" class="text-center">
+                      <div class="spinner-border spinner-border-sm" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                      </div>
+                      Loading tasks...
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Column -->
+      <div class="col-lg-4">
+        <!-- Quick Actions -->
+        <div class="card mb-4">
+          <div class="card-header bg-white">
+            <h5 class="mb-0"><i class="bi bi-lightning"></i> Quick Actions</h5>
+          </div>
+          <div class="card-body">
+            <button class="btn btn-primary w-100 mb-2" data-bs-toggle="modal" data-bs-target="#createTaskModal">
+              <i class="bi bi-plus-circle"></i> Create New Task
+            </button>
+            <button class="btn btn-success w-100 mb-2" id="autoAssignBtn">
+              <i class="bi bi-robot"></i> Auto-Assign Tasks
+            </button>
+            <button class="btn btn-info w-100" data-bs-toggle="modal" data-bs-target="#assignmentPreviewModal">
+              <i class="bi bi-eye"></i> Preview Assignments
+            </button>
+          </div>
+        </div>
+
+        <!-- Live Updates -->
+        <div class="card mb-4">
+          <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="bi bi-broadcast"></i> Live Updates</h5>
+            <span class="badge bg-success" id="connectionStatus">Connected</span>
+          </div>
+          <div class="card-body" style="max-height: 300px; overflow-y: auto;" id="liveUpdates">
+            <p class="text-muted small">Waiting for updates...</p>
+          </div>
+        </div>
+
+        <!-- Employee Summary -->
+        <div class="card mb-4">
+          <div class="card-header bg-white">
+            <h5 class="mb-0"><i class="bi bi-people"></i> Employee Summary</h5>
+          </div>
+          <div class="card-body">
+            <div class="d-flex justify-content-between mb-2">
+              <span>Total Employees:</span>
+              <strong id="totalEmployees">0</strong>
+            </div>
+            <div class="d-flex justify-content-between mb-2">
+              <span>Available:</span>
+              <strong class="text-success" id="availableEmployees">0</strong>
+            </div>
+            <div class="d-flex justify-content-between mb-2">
+              <span>Busy:</span>
+              <strong class="text-warning" id="busyEmployees">0</strong>
+            </div>
+            <div class="d-flex justify-content-between">
+              <span>On Leave:</span>
+              <strong class="text-danger" id="onLeaveEmployees">0</strong>
+            </div>
+            <hr>
+            <a href="/manager/employees" class="btn btn-outline-primary btn-sm w-100">View All Employees</a>
+          </div>
+        </div>
+
+        <!-- Burndown Chart -->
+        <div class="card">
+          <div class="card-header bg-white">
+            <h5 class="mb-0"><i class="bi bi-graph-down"></i> Burndown Chart</h5>
+          </div>
+          <div class="card-body">
+            <canvas id="burndownChart"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Create Task Modal -->
+  <div class="modal fade" id="createTaskModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title"><i class="bi bi-plus-circle"></i> Create New Task</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <form id="createTaskForm">
+          <div class="modal-body">
+            <div class="mb-3">
+              <label for="taskTitle" class="form-label">Task Title *</label>
+              <input type="text" class="form-control" id="taskTitle" name="title" required>
+            </div>
+            
+            <div class="mb-3">
+              <label for="taskDescription" class="form-label">Description</label>
+              <textarea class="form-control" id="taskDescription" name="description" rows="3"></textarea>
+            </div>
+            
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label for="taskPriority" class="form-label">Priority *</label>
+                <select class="form-select" id="taskPriority" name="priority" required>
+                  <option value="low">Low</option>
+                  <option value="medium" selected>Medium</option>
+                  <option value="high">High</option>
+                  <option value="critical">Critical</option>
+                </select>
+              </div>
+              
+              <div class="col-md-6 mb-3">
+                <label for="taskDeadline" class="form-label">Deadline *</label>
+                <input type="datetime-local" class="form-control" id="taskDeadline" name="deadline" required>
+              </div>
+            </div>
+            
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label for="taskEstimatedHours" class="form-label">Estimated Hours *</label>
+                <input type="number" class="form-control" id="taskEstimatedHours" name="estimated_hours" step="0.5" min="0.5" required>
+              </div>
+              
+              <div class="col-md-6 mb-3">
+                <label for="taskComplexity" class="form-label">Complexity (1-5)</label>
+                <input type="number" class="form-control" id="taskComplexity" name="complexity_score" min="1" max="5" step="0.5" value="3">
+              </div>
+            </div>
+            
+            <div class="mb-3">
+              <label for="taskSkills" class="form-label">Required Skills (comma-separated)</label>
+              <input type="text" class="form-control" id="taskSkills" name="required_skills" placeholder="e.g., Python, JavaScript, Database Design">
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-primary">Create Task</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Assignment Preview Modal -->
+  <div class="modal fade" id="assignmentPreviewModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title"><i class="bi bi-eye"></i> Assignment Preview</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div id="assignmentPreviewContent">
+            <div class="text-center">
+              <div class="spinner-border" role="status">
+                <span class="visually-hidden">Loading...</span>
+              </div>
+              <p class="mt-2">Loading assignment preview...</p>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Profile Modal -->
+  <div class="modal fade" id="profileModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title"><i class="bi bi-person-circle"></i> Profile Settings</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <p>Profile settings coming soon...</p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="/static/js/manager_dashboard.js"></script>
+</body>
+</html>
