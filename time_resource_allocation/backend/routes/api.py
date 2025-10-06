@@ -6,6 +6,12 @@ Flask API endpoints for the application
 from flask import Blueprint, request, jsonify
 from datetime import datetime
 import logging
+import sys
+from pathlib import Path
+
+# Add scripts directory to path for imports
+scripts_path = Path(__file__).parent.parent / 'scripts'
+sys.path.insert(0, str(scripts_path))
 
 # Placeholder for database access (implement with actual DB)
 # from models.models import db, Employee, Task, TaskAssignment, ProgressLog
@@ -26,39 +32,110 @@ def trigger_pipeline():
     
     Request JSON:
     {
-        "method": "greedy|hungarian|balanced",
-        "include_gemini": true|false
+        "method": "greedy_ml|balanced_ml",
+        "include_gemini": true|false,
+        "max_assignments_per_employee": 5,
+        "preview_only": false
     }
     """
     try:
+        from scheduler_service import get_scheduler_service
+        
         data = request.get_json() or {}
-        method = data.get('method', 'balanced')
+        method = data.get('method', 'greedy_ml')
         include_gemini = data.get('include_gemini', False)
+        max_assignments = data.get('max_assignments_per_employee', 5)
+        preview_only = data.get('preview_only', False)
         
         logger.info(f"Triggering pipeline with method={method}, gemini={include_gemini}")
         
-        # TODO: Implement actual pipeline
-        # 1. Fetch pending tasks and available employees
-        # 2. Run scoring inference
-        # 3. Run assignment algorithm
-        # 4. Store results in database
-        # 5. Trigger ETA predictions
-        # 6. Run anomaly detection
+        # TODO: Fetch pending tasks and available employees from database
+        # For now, use sample data
+        sample_tasks = [
+            {
+                'task_id': 1,
+                'title': 'Implement User Authentication',
+                'required_skills': 'Python,Flask,JWT',
+                'priority': 'high',
+                'estimated_hours': 20,
+                'deadline': '2024-02-15',
+                'complexity_score': 4.0
+            },
+            {
+                'task_id': 2,
+                'title': 'Create Dashboard UI',
+                'required_skills': 'React,JavaScript,CSS',
+                'priority': 'medium',
+                'estimated_hours': 15,
+                'deadline': '2024-02-20',
+                'complexity_score': 3.0
+            }
+        ]
         
-        # Placeholder response
-        result = {
-            'status': 'success',
-            'message': 'Pipeline triggered successfully',
-            'assignments_created': 5,
-            'timestamp': datetime.now().isoformat(),
-            'method': method,
-            'gemini_enabled': include_gemini
+        sample_employees = [
+            {
+                'employee_id': 1,
+                'name': 'Alice Johnson',
+                'skills': 'Python,React,PostgreSQL,ML',
+                'experience_years': 5.5,
+                'current_workload': 20,
+                'max_workload': 40,
+                'availability_status': 'available',
+                'performance_rating': 4.5
+            },
+            {
+                'employee_id': 2,
+                'name': 'Bob Smith',
+                'skills': 'Python,Flask,PostgreSQL,API',
+                'experience_years': 3.0,
+                'current_workload': 15,
+                'max_workload': 40,
+                'availability_status': 'available',
+                'performance_rating': 4.0
+            }
+        ]
+        
+        # Get scheduler service
+        scheduler = get_scheduler_service()
+        
+        # Prepare constraints
+        constraints = {
+            'max_assignments_per_employee': max_assignments,
+            'include_gemini': include_gemini
         }
+        
+        if preview_only:
+            # Generate preview only
+            preview = scheduler.preview_assignments(
+                sample_tasks, sample_employees, constraints, method
+            )
+            
+            result = {
+                'status': 'success',
+                'message': 'Assignment preview generated',
+                'preview': preview,
+                'timestamp': datetime.now().isoformat()
+            }
+        else:
+            # Generate and finalize assignments
+            preview = scheduler.preview_assignments(
+                sample_tasks, sample_employees, constraints, method
+            )
+            
+            # TODO: Pass database connection
+            finalized = scheduler.finalize_assignments(preview['preview_id'])
+            
+            result = {
+                'status': 'success',
+                'message': 'Pipeline completed successfully',
+                'finalized': finalized,
+                'timestamp': datetime.now().isoformat()
+            }
         
         return jsonify(result), 200
         
     except Exception as e:
-        logger.error(f"Error triggering pipeline: {str(e)}")
+        logger.error(f"Error triggering pipeline: {str(e)}", exc_info=True)
         return jsonify({'error': str(e)}), 500
 
 
@@ -165,6 +242,79 @@ def get_assignment(assignment_id):
         
     except Exception as e:
         logger.error(f"Error fetching assignment {assignment_id}: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+
+@api.route('/assignments/preview', methods=['POST'])
+def preview_assignments():
+    """
+    Preview task assignments without finalizing
+    
+    Request JSON:
+    {
+        "tasks": [...],
+        "employees": [...],
+        "method": "greedy_ml|balanced_ml",
+        "constraints": {
+            "max_assignments_per_employee": 5,
+            "include_gemini": false
+        }
+    }
+    """
+    try:
+        from scheduler_service import get_scheduler_service
+        
+        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'Request body is required'}), 400
+        
+        tasks = data.get('tasks', [])
+        employees = data.get('employees', [])
+        method = data.get('method', 'greedy_ml')
+        constraints = data.get('constraints', {})
+        
+        if not tasks:
+            return jsonify({'error': 'No tasks provided'}), 400
+        if not employees:
+            return jsonify({'error': 'No employees provided'}), 400
+        
+        logger.info(f"Generating assignment preview for {len(tasks)} tasks")
+        
+        scheduler = get_scheduler_service()
+        preview = scheduler.preview_assignments(tasks, employees, constraints, method)
+        
+        return jsonify(preview), 200
+        
+    except Exception as e:
+        logger.error(f"Error generating preview: {str(e)}", exc_info=True)
+        return jsonify({'error': str(e)}), 500
+
+
+@api.route('/assignments/finalize/<preview_id>', methods=['POST'])
+def finalize_assignments(preview_id):
+    """
+    Finalize assignments from a preview
+    
+    Path params:
+    - preview_id: Preview identifier
+    """
+    try:
+        from scheduler_service import get_scheduler_service
+        
+        logger.info(f"Finalizing assignments for preview {preview_id}")
+        
+        scheduler = get_scheduler_service()
+        
+        # TODO: Pass database connection
+        result = scheduler.finalize_assignments(preview_id)
+        
+        return jsonify(result), 200
+        
+    except ValueError as e:
+        logger.warning(f"Preview not found: {str(e)}")
+        return jsonify({'error': str(e)}), 404
+    except Exception as e:
+        logger.error(f"Error finalizing assignments: {str(e)}", exc_info=True)
         return jsonify({'error': str(e)}), 500
 
 
