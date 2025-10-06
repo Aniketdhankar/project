@@ -11,6 +11,13 @@ from pathlib import Path
 from config.config import get_config
 from routes.api import api
 from routes.websocket import websocket_bp
+from routes.auth import auth_bp
+from routes.employees import employees_bp
+from routes.tasks import tasks_bp
+from routes.scheduler import scheduler_bp
+from routes.assignments import assignments_bp
+from routes.timesheets import timesheets_bp
+from routes.dashboard import dashboard_bp
 
 # Configure logging
 logging.basicConfig(
@@ -52,6 +59,13 @@ def create_app(config_name=None):
     # Register blueprints
     app.register_blueprint(api, url_prefix='/api')
     app.register_blueprint(websocket_bp, url_prefix='/api')
+    app.register_blueprint(auth_bp, url_prefix='/api/auth')
+    app.register_blueprint(employees_bp, url_prefix='/api/employees')
+    app.register_blueprint(tasks_bp, url_prefix='/api/tasks')
+    app.register_blueprint(scheduler_bp, url_prefix='/api/scheduler')
+    app.register_blueprint(assignments_bp, url_prefix='/api/assignments')
+    app.register_blueprint(timesheets_bp, url_prefix='/api/timesheets')
+    app.register_blueprint(dashboard_bp, url_prefix='/api/dashboard')
     
     # Register error handlers
     register_error_handlers(app)
