@@ -9,6 +9,7 @@ import logging
 from pathlib import Path
 
 from config.config import get_config
+from extensions import db, migrate
 from routes.api import api
 from routes.websocket import websocket_bp
 
@@ -42,12 +43,11 @@ def create_app(config_name=None):
     CORS(app, origins=app.config.get('CORS_ORIGINS', ['*']))
     
     # Initialize database
-    # NOTE: Uncomment when database models are ready
-    # from models.models import db
-    # db.init_app(app)
-    # 
-    # with app.app_context():
-    #     db.create_all()
+    db.init_app(app)
+    migrate.init_app(app, db)
+    
+    # Import models to ensure they are registered with SQLAlchemy
+    from models import models
     
     # Register blueprints
     app.register_blueprint(api, url_prefix='/api')
