@@ -36,7 +36,7 @@ def login():
     }
     """
     try:
-        data = request.get_json()
+        data = request.get_json(silent=True)
         
         # Validate required fields
         if not data:
