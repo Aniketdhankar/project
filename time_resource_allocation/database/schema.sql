@@ -4,6 +4,7 @@
 -- =====================================================
 
 -- Drop existing tables if they exist (for development)
+DROP TABLE IF EXISTS Model_Training_Rows CASCADE;
 DROP TABLE IF EXISTS ETA_Explanations CASCADE;
 DROP TABLE IF EXISTS Anomaly_Triage CASCADE;
 DROP TABLE IF EXISTS Progress_Logs CASCADE;
@@ -306,6 +307,50 @@ JOIN Tasks t ON an.task_id = t.task_id
 LEFT JOIN Employees e ON an.employee_id = e.employee_id
 WHERE an.status = 'open'
 ORDER BY an.severity DESC, an.detected_at DESC;
+
+-- =====================================================
+-- 8. Model Training Rows Table
+-- =====================================================
+-- Stores historical assignment data for ML model training
+CREATE TABLE Model_Training_Rows (
+    training_row_id SERIAL PRIMARY KEY,
+    employee_id INTEGER REFERENCES Employees(employee_id) ON DELETE CASCADE,
+    task_id INTEGER REFERENCES Tasks(task_id) ON DELETE CASCADE,
+    assignment_id INTEGER REFERENCES Task_Assignments(assignment_id) ON DELETE SET NULL,
+    
+    -- Employee features (snapshot at assignment time)
+    emp_experience_years DECIMAL(4,2),
+    emp_workload_ratio DECIMAL(5,4),  -- current_workload / max_workload
+    emp_performance_rating DECIMAL(3,2),
+    emp_active_tasks INTEGER,
+    emp_availability VARCHAR(50),
+    
+    -- Task features
+    task_priority VARCHAR(20),
+    task_complexity_score DECIMAL(3,2),
+    task_estimated_hours DECIMAL(6,2),
+    task_urgency_score DECIMAL(5,4),  -- Calculated urgency based on deadline
+    
+    -- Interaction features
+    skill_match_score DECIMAL(5,4),  -- 0-1 scale
+    workload_compatibility DECIMAL(5,4),  -- 0-1 scale
+    
+    -- Labels/outcomes (filled when assignment completes)
+    success_score DECIMAL(5,4),  -- Overall success score (0-1)
+    completed_on_time BOOLEAN,
+    actual_hours DECIMAL(6,2),
+    quality_rating DECIMAL(3,2),  -- 0-5 scale (from feedback/review)
+    
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
+    UNIQUE(assignment_id)  -- One training row per assignment
+);
+
+-- Indexes for faster queries
+CREATE INDEX idx_training_employee ON Model_Training_Rows(employee_id);
+CREATE INDEX idx_training_task ON Model_Training_Rows(task_id);
+CREATE INDEX idx_training_assignment ON Model_Training_Rows(assignment_id);
+CREATE INDEX idx_training_created ON Model_Training_Rows(created_at);
 
 -- =====================================================
 -- END OF SCHEMA

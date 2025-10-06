@@ -190,3 +190,62 @@ class AnomalyTriage(db.Model):
             'resolved_at': self.resolved_at.isoformat() if self.resolved_at else None,
             'resolution_notes': self.resolution_notes
         }
+
+
+class ModelTrainingRow(db.Model):
+    """Model Training Row - Historical data for ML training"""
+    __tablename__ = 'model_training_rows'
+    
+    training_row_id = db.Column(db.Integer, primary_key=True)
+    employee_id = db.Column(db.Integer, db.ForeignKey('employees.employee_id'), nullable=False)
+    task_id = db.Column(db.Integer, db.ForeignKey('tasks.task_id'), nullable=False)
+    assignment_id = db.Column(db.Integer, db.ForeignKey('task_assignments.assignment_id'))
+    
+    # Employee features (snapshot at assignment time)
+    emp_experience_years = db.Column(db.Numeric(4, 2))
+    emp_workload_ratio = db.Column(db.Numeric(5, 4))
+    emp_performance_rating = db.Column(db.Numeric(3, 2))
+    emp_active_tasks = db.Column(db.Integer)
+    emp_availability = db.Column(db.String(50))
+    
+    # Task features
+    task_priority = db.Column(db.String(20))
+    task_complexity_score = db.Column(db.Numeric(3, 2))
+    task_estimated_hours = db.Column(db.Numeric(6, 2))
+    task_urgency_score = db.Column(db.Numeric(5, 4))
+    
+    # Interaction features
+    skill_match_score = db.Column(db.Numeric(5, 4))
+    workload_compatibility = db.Column(db.Numeric(5, 4))
+    
+    # Label - outcome of assignment
+    success_score = db.Column(db.Numeric(5, 4))  # 0-1 scale based on completion quality/time
+    completed_on_time = db.Column(db.Boolean)
+    actual_hours = db.Column(db.Numeric(6, 2))
+    quality_rating = db.Column(db.Numeric(3, 2))  # 0-5 scale
+    
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    def to_dict(self):
+        return {
+            'training_row_id': self.training_row_id,
+            'employee_id': self.employee_id,
+            'task_id': self.task_id,
+            'assignment_id': self.assignment_id,
+            'emp_experience_years': float(self.emp_experience_years) if self.emp_experience_years else None,
+            'emp_workload_ratio': float(self.emp_workload_ratio) if self.emp_workload_ratio else None,
+            'emp_performance_rating': float(self.emp_performance_rating) if self.emp_performance_rating else None,
+            'emp_active_tasks': self.emp_active_tasks,
+            'emp_availability': self.emp_availability,
+            'task_priority': self.task_priority,
+            'task_complexity_score': float(self.task_complexity_score) if self.task_complexity_score else None,
+            'task_estimated_hours': float(self.task_estimated_hours) if self.task_estimated_hours else None,
+            'task_urgency_score': float(self.task_urgency_score) if self.task_urgency_score else None,
+            'skill_match_score': float(self.skill_match_score) if self.skill_match_score else None,
+            'workload_compatibility': float(self.workload_compatibility) if self.workload_compatibility else None,
+            'success_score': float(self.success_score) if self.success_score else None,
+            'completed_on_time': self.completed_on_time,
+            'actual_hours': float(self.actual_hours) if self.actual_hours else None,
+            'quality_rating': float(self.quality_rating) if self.quality_rating else None,
+            'created_at': self.created_at.isoformat() if self.created_at else None
+        }
