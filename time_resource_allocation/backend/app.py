@@ -3,7 +3,7 @@ Main Flask Application
 Entry point for the Time & Resource Allocation System
 """
 
-from flask import Flask, jsonify
+from flask import Flask, jsonify, render_template, redirect, url_for
 from flask_cors import CORS
 import logging
 from pathlib import Path
@@ -56,17 +56,60 @@ def create_app(config_name=None):
     # Register error handlers
     register_error_handlers(app)
     
-    # Register health check
-    @app.route('/')
-    def index():
-        return jsonify({
-            'name': 'Time & Resource Allocation System API',
-            'version': '1.0.0',
-            'status': 'running'
-        })
+    # Register HTML routes
+    register_html_routes(app)
     
     logger.info("Application initialized successfully")
     return app
+
+
+def register_html_routes(app):
+    """Register HTML template routes"""
+    
+    @app.route('/')
+    def index():
+        """Redirect to login page"""
+        return redirect(url_for('login'))
+    
+    @app.route('/login')
+    def login():
+        """Login page"""
+        return render_template('login.html')
+    
+    @app.route('/register')
+    def register():
+        """Registration page"""
+        return render_template('register.html')
+    
+    @app.route('/manager/dashboard')
+    def manager_dashboard():
+        """Manager dashboard"""
+        return render_template('manager_dashboard.html')
+    
+    @app.route('/manager/employees')
+    def manager_employees():
+        """Manager employees page"""
+        return render_template('manager_employees.html')
+    
+    @app.route('/manager/tasks')
+    def manager_tasks():
+        """Manager tasks page - redirect to dashboard for now"""
+        return redirect(url_for('manager_dashboard'))
+    
+    @app.route('/employee/dashboard')
+    def employee_dashboard():
+        """Employee dashboard"""
+        return render_template('employee_dashboard.html')
+    
+    @app.route('/employee/tasks')
+    def employee_tasks():
+        """Employee tasks page - redirect to dashboard for now"""
+        return redirect(url_for('employee_dashboard'))
+    
+    @app.route('/employee/timesheet')
+    def employee_timesheet():
+        """Employee timesheet page - redirect to dashboard for now"""
+        return redirect(url_for('employee_dashboard'))
 
 
 def register_error_handlers(app):
@@ -74,10 +117,14 @@ def register_error_handlers(app):
     
     @app.errorhandler(404)
     def not_found(error):
-        return jsonify({
-            'error': 'Not found',
-            'message': 'The requested resource was not found'
-        }), 404
+        # Check if request is for API
+        if '/api/' in str(error):
+            return jsonify({
+                'error': 'Not found',
+                'message': 'The requested resource was not found'
+            }), 404
+        # Otherwise redirect to login
+        return redirect(url_for('login'))
     
     @app.errorhandler(400)
     def bad_request(error):
